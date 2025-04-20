@@ -1,0 +1,98 @@
+/*form*/
+.search-ip {
+    margin: 0 auto;
+    padding: 0;
+    --bg-color: antiquewhite;
+    --main-color: #F86630;
+    --border-secondary-color: black;
+    --error-color: red;
+    --field-height: 50px;
+    --field-width: 400px;
+    --button-width: 80px;
+    --field-border-radius: calc(var(--field-height) / 2);
+    width: var(--field-width);
+}
+.search-ip__form {
+
+}
+.search-ip__form__group {
+    margin-bottom: 25px;
+    display: flex;
+    flex-flow: row;
+    height: var(--field-height);
+}
+.search-ip__form__input {
+    background-color: var(--bg-color);
+    outline: none;
+    display: block;
+    border: 3px solid var(--main-color);
+    border-top-left-radius: var(--field-border-radius);
+    border-bottom-left-radius: var(--field-border-radius);
+    border-right-style: none;
+    width: 100%;
+    padding-left: 20px;
+}
+.search-ip__form__input:focus {
+}
+.search-ip__form__button {
+    display: block;
+    width: var(--button-width);
+    background-color: var(--main-color);
+    border-style: none;
+    border-top-right-radius: var(--field-border-radius);
+    border-bottom-right-radius: var(--field-border-radius);
+    padding: 0;
+}
+.search-ip__form__icon {
+    fill: var(--bg-color);
+}
+/*form*/
+
+/*result*/
+.search-ip__result {
+    background-color: var(--bg-color);
+    margin: 0 auto;
+}
+.search-ip__result__items {
+    width: 400px;
+    margin: 0 auto;
+}
+.search-ip__result__item {
+    margin: 5px auto;
+    display: flex;
+    flex-flow: row;
+    align-items: center;
+    justify-content: center;
+    border-bottom: 2px solid var(--main-color);
+}
+.search-ip__result__item .title {
+    width: 100%;
+    margin-right: 10px;
+    padding: 5px;
+}
+.search-ip__result__item .value {
+    width: 100%;
+    margin-left: 10px;
+    padding: 5px;
+}
+/*result*/
+
+/*error*/
+.search-ip__result__error {
+    max-width: 100%;
+    display: flex;
+    flex-direction: column;
+    height: auto;
+    padding: 25px 0;
+}
+.icon {
+    margin: 0 auto 20px auto;
+    height: 60px;
+}
+.message {
+    color: var(--error-color);
+    text-align: center;
+    margin: 0 auto;
+}
+/*error*/
+
