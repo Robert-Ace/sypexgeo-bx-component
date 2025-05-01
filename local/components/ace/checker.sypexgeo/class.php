@@ -1,15 +1,23 @@
 <?php
-use Bitrix\Main\Application;
+if (!defined('B_PROLOG_INCLUDED') || B_PROLOG_INCLUDED !== true) {
+    die();
+}
+
+use Bitrix\Main\ArgumentException;
 use Bitrix\Main\Loader;
 use Bitrix\Main\LoaderException;
+use Bitrix\Main\ObjectPropertyException;
+use Bitrix\Main\SystemException;
 use Bitrix\Main\Web\HttpClient;
 use Bitrix\Main\Web\Uri;
-use \Bitrix\Main\Web\Json;
+use Bitrix\Main\Web\Json;
 use Bitrix\Highloadblock\HighloadBlockTable;
+use Bitrix\Main\Engine\ActionFilter;
+use Bitrix\Main\Engine\Contract\Controllerable;
+use Bitrix\Main\Mail\Event;
+use Bitrix\Main\Config\Option;
 
-if (!defined('B_PROLOG_INCLUDED') || B_PROLOG_INCLUDED !== true) die();
-
-class GeoIPComponent extends CBitrixComponent
+class SypexgeoComponent extends CBitrixComponent implements Controllerable
 {
     private const HL_MODULE_NAME = 'highloadblock';
     private const SERVICE_URL = 'https://api.sypexgeo.net/json/';
@@ -18,7 +26,13 @@ class GeoIPComponent extends CBitrixComponent
     private string $hlName = 'IpInfo';
     private int $cacheTime = 36000000;
     private \Bitrix\Main\ORM\Entity $hlEntity;
-    // соотношение свойств HL к ключам данных сервиса
+
+    /**
+     * Соотношение свойств HL блока к ключам данных ответа сервиса.
+     * Используется для сохранения новых данных и для выборки из БД.
+     * Ответ используемого сервиса имеет следующий формат:
+     * {'ip': 123,'city': {'id': 321, 'name_ru': 'Саратов', 'name_en': 'Saratov'}}
+     */
     private const FIELD_RELATIONS = [
         'UF_IP_ADDRESS' => 'ip',
         'UF_CITY_ID' => ['city' => 'id'],
@@ -31,10 +45,16 @@ class GeoIPComponent extends CBitrixComponent
         'UF_COUNTRY_NAME_RU' => ['country' => 'name_ru'],
         'UF_COUNTRY_NAME_EN' => ['country' => 'name_en']
     ];
-    private const SYSTEM_ERROR_CODE = 0;
-    private const EMPTY_RESULT_ERROR_CODE = 1;
-    private const INPUT_ERROR_CODE = 2;
-    private const NETWORK_ERROR_CODE = 3;
+
+    private const SYSTEM_ERROR_CODE = '0';
+    private const EMPTY_RESULT_ERROR_CODE = '1';
+    private const INPUT_ERROR_CODE = '2';
+    private const NETWORK_ERROR_CODE = '3';
+
+    /**
+     * Массив текста упрощённых сообщений по отношению к коду ошибки.
+     * Используется для отдачи клиенту и отправки на почту в упрощённом виде
+     */
     private const PUBLIC_ERROR_MESSAGES = [
         self::SYSTEM_ERROR_CODE => 'Ошибка системы.',
         self::EMPTY_RESULT_ERROR_CODE => 'Нет результатов.',
@@ -43,17 +63,57 @@ class GeoIPComponent extends CBitrixComponent
     ];
 
     /**
-     * @throws \Bitrix\Main\LoaderException
-     * @throws \Bitrix\Main\SystemException
+     * Адрес получателя писем об ошибках
+     * Так же используется для установки глобальной константы, которую требует функция SendError()
+     */
+    private string $email = '';
+
+    public function configureActions(): array
+    {
+        return [
+            'check' => [
+                'prefilters' => [
+                    new \Bitrix\Main\Engine\ActionFilter\Csrf(),
+                ]
+            ]
+        ];
+    }
+
+    /**
+     * @throws LoaderException
+     * @throws ArgumentException
+     * @throws ObjectPropertyException
+     * @throws SystemException
+     */
+    public function checkAction($ip)
+    {
+//        throw new SystemException(
+//            'Видимо, что-то случилось...',
+//            self::EMPTY_RESULT_ERROR_CODE
+//        );
+        return $this->getResult($ip);
+    }
+
+    /**
+     * @throws LoaderException
+     * @throws SystemException
      */
     private function initialize():void
     {
-        // определяем необходимую константу адреса почты
-        define('ERROR_EMAIL', $this->arParams['EMAIL']);
+        // если константа адреса получателя писем об ошибках не была установлена ранее
+        if(!defined('ERROR_EMAIL')) {
+            // установим из настроек сайта
+            $this->email = Option::get("main", "email_from");
+            // определяем необходимую константу адреса почты для отправки развёрнутой ошибки
+            define('ERROR_EMAIL', $this->email);
+        }
         // подключаем модуль HL и выбрасываем исключение если модуль не установлен
         if (!Loader::includeModule(self::HL_MODULE_NAME)) {
-            throw new \Bitrix\Main\SystemException(
-                'Не удалось подключить модуль "' . self::HL_MODULE_NAME . '".',
+            // отправляем на почту оригинал ошибки
+            $this->sendErrorMessage('Не удалось подключить модуль "' . self::HL_MODULE_NAME . '".');
+            //выбрасываем клиенту изменённое сообщение
+            throw new SystemException(
+                self::replaceErrorMessageForClient(self::SYSTEM_ERROR_CODE),
                 self::SYSTEM_ERROR_CODE
             );
         }
@@ -62,8 +122,7 @@ class GeoIPComponent extends CBitrixComponent
     }
 
     /**
-     * @throws \Bitrix\Main\ArgumentException
-     * @throws \Bitrix\Main\SystemException
+     * @throws SystemException
      */
     private function getGeoIPData(string $userIP): array
     {
@@ -80,7 +139,13 @@ class GeoIPComponent extends CBitrixComponent
             foreach ($arrHttpError as $key => $value) {
                 $message .= $key . ': ' . $value . "\n";
             }
-            throw new \Bitrix\Main\SystemException($message, self::NETWORK_ERROR_CODE);
+            // отправляем на почту оригинал ошибки
+            $this->sendErrorMessage($message);
+            //выбрасываем клиенту изменённое сообщение
+            throw new SystemException(
+                self::replaceErrorMessageForClient(self::NETWORK_ERROR_CODE),
+                self::NETWORK_ERROR_CODE
+            );
         }
         // получаем ответ
         $response = $client->getResponse();
@@ -90,7 +155,13 @@ class GeoIPComponent extends CBitrixComponent
             // выбрасываем исключение если код ответа сервера не 200
             if ($statusCode !== 200) {
                 $message = $statusCode . ': ' . $reasonPhrase . "\n";
-                throw new \Bitrix\Main\SystemException($message, self::NETWORK_ERROR_CODE);
+                // отправляем на почту оригинал ошибки
+                $this->sendErrorMessage($message);
+                //выбрасываем клиенту изменённое сообщение
+                throw new SystemException(
+                    self::replaceErrorMessageForClient(self::NETWORK_ERROR_CODE),
+                    self::NETWORK_ERROR_CODE
+                );
             }
         }
         // получение результата
@@ -101,34 +172,43 @@ class GeoIPComponent extends CBitrixComponent
         if (!isset($arData['country']) || empty($arData['country']['id'])) {
             // код ошибки зададим отличный от других ошибок для использования на стороне клиента, например
             // ибо это просто пустой результат как для 192.168.0.1
-            throw new \Bitrix\Main\SystemException("Нет результатов.", self::EMPTY_RESULT_ERROR_CODE);
+            throw new SystemException("Нет результатов.", self::EMPTY_RESULT_ERROR_CODE);
         }
-        // если в ответе сервиса есть ошибка, выбросим исключение
-        if($arData['error']) {
-            throw new \Bitrix\Main\SystemException($arData['error'], self::NETWORK_ERROR_CODE);
+        // если в ответе сервиса есть ошибка
+        if ($arData['error']) {
+            // отправляем на почту оригинал ошибки
+            $this->sendErrorMessage($arData['error']);
+            //выбрасываем клиенту изменённое сообщение
+            throw new SystemException(
+                self::replaceErrorMessageForClient(self::NETWORK_ERROR_CODE),
+                self::NETWORK_ERROR_CODE
+            );
         }
         return $arData;
     }
 
     /**
-     * @throws \Bitrix\Main\ArgumentException
-     * @throws \Bitrix\Main\ObjectPropertyException
-     * @throws \Bitrix\Main\SystemException
+     * Выборка из HL блока ограничивается ключами массива сопоставлений FIELD_RELATIONS
+     * @throws ArgumentException
+     * @throws ObjectPropertyException
+     * @throws SystemException
      */
     private function getDataFromHL(string $queryIP): bool|array
     {
         $entityDataClass = $this->hlEntity->getDataClass();
         $query = $entityDataClass::query();
         // поля для выборки устанавливаем из ключей константы сопоставлений
-        $query->setSelect(array_keys(self::FIELD_RELATIONS))
+        $fields = array_keys(self::FIELD_RELATIONS);
+        $query->setSelect($fields)
             ->setFilter(['UF_IP_ADDRESS' => $queryIP])
             ->setCacheTtl($this->cacheTime);
         return $query->exec()->fetch();
     }
 
     /**
-     * @throws \Bitrix\Main\ArgumentException
-     * @throws \Bitrix\Main\SystemException
+     * Запись уже подготовленных данных в HL блок
+     * @throws ArgumentException
+     * @throws SystemException
      */
     private function addDataToHL(array $arData): void
     {
@@ -143,97 +223,115 @@ class GeoIPComponent extends CBitrixComponent
         $result->isSuccess();
     }
 
+    /**
+     * Агрегация и подготовка данных ответа сервиса используя массив соотношений.
+     * @param array $arApiData
+     * @return array
+     */
     private function prepareApiDataForHL(array $arApiData): array
     {
-        // агрегация ответа сервиса по необходимым свойствам
         $arResult = [];
-        foreach (self::FIELD_RELATIONS as $key => $value) {
-            if(!is_array($value)) {
-                $arResult[$key] = (string) $arApiData[$value];
+        // Проходимся по каждому соотношению.
+        foreach (self::FIELD_RELATIONS as $hlField => $serviceField) {
+            // Если ключ для сервиса не массив - получим значение сразу по ключу.
+            if(!is_array($serviceField)) {
+                $arResult[$hlField] = (string) $arApiData[$serviceField];
+            // Иначе получим доступ к значению перебрав составной ключ (он же массив).
             } else {
-                foreach ($value as $k => $v) {
-                    $arResult[$key] =  (string) $arApiData[$k][$v];
+                foreach ($serviceField as $serviceParentField => $serviceChildField) {
+                    $arResult[$hlField] =  (string) $arApiData[$serviceParentField][$serviceChildField];
                 }
             }
         }
         return $arResult;
-    }
-
-    private static function sendErrorMessage(string $message): void
-    {
-        // отправка письма на email инструментами Битрикс
-        SendError("[" . $message . "]\n\n");
     }
 
     /**
-     * @throws \Bitrix\Main\SystemException
+     * Проверка клиентского ввода по регулярному выражению.
+     * @throws SystemException
      */
     private function validateIP(string $queryIP): void
     {
-        // проверка клиентского параметра по регулярному выражению
         $pattern = "/^(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/";
         $isValid = preg_match($pattern, $queryIP) === 1;
-        // выбрасываю исключение на случай если каким-то образом не сработает валидация на фронте
+        // Если каким-то образом не сработает валидация на фронте.
         if (!$isValid) {
-            throw new \Bitrix\Main\SystemException('Введён неверный IP адрес', self::INPUT_ERROR_CODE);
+            // Отправляем на почту оригинал ошибки.
+            $this->sendErrorMessage("Введён неверный IP адрес: $queryIP");
+            // Выбрасываем клиенту изменённое сообщение.
+            throw new SystemException(
+                self::replaceErrorMessageForClient(self::INPUT_ERROR_CODE),
+                self::INPUT_ERROR_CODE);
         }
     }
-    private function prepareErrorForClient(int $code): array
+
+    /**
+     * Замена текста сообщения в зависимости от кода ошибки.
+     * @param int $code
+     * @return string
+     */
+    private static function replaceErrorMessageForClient(int $code): string
     {
-        // Установим текст сообщения для клиента. В зависимости от кода
-        return ['CODE' => $code, 'MESSAGE' => self::PUBLIC_ERROR_MESSAGES[$code]];
+        return self::PUBLIC_ERROR_MESSAGES[$code];
     }
 
-    private function getResult(): array
+    /**
+     * Отправка письма с описанием ошибки.
+     * @param string $message
+     * @return void
+     */
+    private function sendErrorMessage(string $message): void
     {
-        // основная работа компонента
-        $arResult = [];
-        try {
-            // аналог конструктора
-            $this->initialize();
-            // текущий контекст запроса
-            $request = Application::getInstance()->getContext()->getRequest();
-            // получаем клиентский запрос из get
-            $strQuery = $request->getQuery(self::API_GET_PARAM);
-            // если был передан параметр запроса
-            if($strQuery) {
-                // валидация клиентского запроса
-                $this->validateIP($strQuery);
-                // если есть запись в HL
-                $hlData = $this->getDataFromHL($strQuery);
-                if ($hlData) {
-                    // отдаем клиенту
-                    $arResult['ITEMS'] = $hlData;
-                } else {
-                    // иначе идём в сервис
-                    $arApiData = $this->getGeoIPData($strQuery);
-                    // подготавливаем ответ для сохранения
-                    $newData = $this->prepareApiDataForHL($arApiData);
-                    // сохраняем в HL
-                    $this->addDataToHL($newData);
-                    // отдаём клиенту
-                    $arResult['ITEMS'] = $newData;
-                }
-            }
-            // отлавливаем сначала LoaderException по приоритету
-        } catch (\Bitrix\Main\LoaderException | \Bitrix\Main\SystemException $e) {
-            // отдаём ошибку клиенту если код нас устраивает
-            $arResult['ERROR'] = $this->prepareErrorForClient($e->getCode());
-            // отправляем сообщение об ошибке на почту
-            self::sendErrorMessage($e->getMessage());
+        // Встроенная функция ядра. Шаблон не требуется, но необходима константа ERROR_EMAIL.
+        SendError("[" . $message . "]\n\n");
+        // Требуется почтовое событие ERROR_SYPEXGEO_COMPONENT и шаблон с полями #EMAIL_TO# #MESSAGE#.
+        // Необходимо развернуть миграцию или создать самостоятельно.
+        Event::send(
+            [
+                "EVENT_NAME" => "ERROR_SYPEXGEO_COMPONENT",
+                "LID" => SITE_ID,
+                "C_FIELDS" => [
+                    "EMAIL_TO" => $this->email,
+                    "MESSAGE" => $message
+                ],
+            ]
+        );
+    }
+
+    /**
+     * Получение результата.
+     * @throws ObjectPropertyException
+     * @throws LoaderException
+     * @throws ArgumentException
+     * @throws SystemException
+     */
+    private function getResult(string $strQuery): ?array
+    {
+        $arResult = null;
+        // Аналог конструктора.
+        $this->initialize();
+        // Валидация клиентского запроса.
+        $this->validateIP($strQuery);
+        // Если есть запись в HL.
+        $hlData = $this->getDataFromHL($strQuery);
+        if ($hlData) {
+            // Отдаем клиенту.
+            $arResult = $hlData;
+        } else {
+            // Иначе идём в сервис.
+            $arApiData = $this->getGeoIPData($strQuery);
+            // Подготавливаем ответ для сохранения
+            $newData = $this->prepareApiDataForHL($arApiData);
+            // Сохраняем в HL.
+            $this->addDataToHL($newData);
+            // Отдаём клиенту.
+            $arResult = $newData;
         }
         return $arResult;
-    }
-
-    public function onPrepareComponentParams($arParams): array
-    {
-        return $arParams;
     }
 
     public function executeComponent(): void
     {
-        // собственно, исполнение компонента
-        $this->arResult = $this->getResult();
         $this->includeComponentTemplate();
     }
 
