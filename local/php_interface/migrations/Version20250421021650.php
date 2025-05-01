@@ -7,7 +7,7 @@ class Version20250421021650 extends Version
 {
     protected $author = "admin";
 
-    protected $description = "";
+    protected $description = "Миграция структуры HL-блока 'ip-адреса'";
 
     protected $moduleVersion = "5.0.0";
 
@@ -21,13 +21,13 @@ class Version20250421021650 extends Version
     $hlblockId = $helper->Hlblock()->saveHlblock(array (
   'NAME' => 'IpInfo',
   'TABLE_NAME' => 'ip_info',
-  'LANG' => 
+  'LANG' =>
   array (
-    'ru' => 
+    'ru' =>
     array (
       'NAME' => 'ip-адреса',
     ),
-    'en' => 
+    'en' =>
     array (
       'NAME' => 'ip-adreses',
     ),
@@ -44,7 +44,7 @@ class Version20250421021650 extends Version
   'SHOW_IN_LIST' => 'Y',
   'EDIT_IN_LIST' => 'Y',
   'IS_SEARCHABLE' => 'N',
-  'SETTINGS' => 
+  'SETTINGS' =>
   array (
     'SIZE' => 20,
     'ROWS' => 1,
@@ -53,27 +53,27 @@ class Version20250421021650 extends Version
     'MAX_LENGTH' => 14,
     'DEFAULT_VALUE' => '',
   ),
-  'EDIT_FORM_LABEL' => 
+  'EDIT_FORM_LABEL' =>
   array (
     'en' => 'IP address',
     'ru' => 'IP адрес',
   ),
-  'LIST_COLUMN_LABEL' => 
+  'LIST_COLUMN_LABEL' =>
   array (
     'en' => '',
     'ru' => '',
   ),
-  'LIST_FILTER_LABEL' => 
+  'LIST_FILTER_LABEL' =>
   array (
     'en' => '',
     'ru' => '',
   ),
-  'ERROR_MESSAGE' => 
+  'ERROR_MESSAGE' =>
   array (
     'en' => '',
     'ru' => '',
   ),
-  'HELP_MESSAGE' => 
+  'HELP_MESSAGE' =>
   array (
     'en' => '',
     'ru' => '',
@@ -90,34 +90,34 @@ class Version20250421021650 extends Version
   'SHOW_IN_LIST' => 'Y',
   'EDIT_IN_LIST' => 'Y',
   'IS_SEARCHABLE' => 'N',
-  'SETTINGS' => 
+  'SETTINGS' =>
   array (
     'SIZE' => 20,
     'MIN_VALUE' => 0,
     'MAX_VALUE' => 0,
     'DEFAULT_VALUE' => NULL,
   ),
-  'EDIT_FORM_LABEL' => 
+  'EDIT_FORM_LABEL' =>
   array (
     'en' => 'City ID',
     'ru' => 'ID города',
   ),
-  'LIST_COLUMN_LABEL' => 
+  'LIST_COLUMN_LABEL' =>
   array (
     'en' => '',
     'ru' => '',
   ),
-  'LIST_FILTER_LABEL' => 
+  'LIST_FILTER_LABEL' =>
   array (
     'en' => '',
     'ru' => '',
   ),
-  'ERROR_MESSAGE' => 
+  'ERROR_MESSAGE' =>
   array (
     'en' => '',
     'ru' => '',
   ),
-  'HELP_MESSAGE' => 
+  'HELP_MESSAGE' =>
   array (
     'en' => '',
     'ru' => '',
@@ -134,7 +134,7 @@ class Version20250421021650 extends Version
   'SHOW_IN_LIST' => 'Y',
   'EDIT_IN_LIST' => 'Y',
   'IS_SEARCHABLE' => 'N',
-  'SETTINGS' => 
+  'SETTINGS' =>
   array (
     'SIZE' => 20,
     'ROWS' => 1,
@@ -143,27 +143,27 @@ class Version20250421021650 extends Version
     'MAX_LENGTH' => 0,
     'DEFAULT_VALUE' => '',
   ),
-  'EDIT_FORM_LABEL' => 
+  'EDIT_FORM_LABEL' =>
   array (
     'en' => 'City name ru',
     'ru' => 'Название города на русском',
   ),
-  'LIST_COLUMN_LABEL' => 
+  'LIST_COLUMN_LABEL' =>
   array (
     'en' => '',
     'ru' => '',
   ),
-  'LIST_FILTER_LABEL' => 
+  'LIST_FILTER_LABEL' =>
   array (
     'en' => '',
     'ru' => '',
   ),
-  'ERROR_MESSAGE' => 
+  'ERROR_MESSAGE' =>
   array (
     'en' => '',
     'ru' => '',
   ),
-  'HELP_MESSAGE' => 
+  'HELP_MESSAGE' =>
   array (
     'en' => '',
     'ru' => '',
@@ -180,7 +180,7 @@ class Version20250421021650 extends Version
   'SHOW_IN_LIST' => 'Y',
   'EDIT_IN_LIST' => 'Y',
   'IS_SEARCHABLE' => 'N',
-  'SETTINGS' => 
+  'SETTINGS' =>
   array (
     'SIZE' => 20,
     'ROWS' => 1,
@@ -189,27 +189,27 @@ class Version20250421021650 extends Version
     'MAX_LENGTH' => 0,
     'DEFAULT_VALUE' => '',
   ),
-  'EDIT_FORM_LABEL' => 
+  'EDIT_FORM_LABEL' =>
   array (
     'en' => 'City name en',
     'ru' => 'Название города на английском',
   ),
-  'LIST_COLUMN_LABEL' => 
+  'LIST_COLUMN_LABEL' =>
   array (
     'en' => '',
     'ru' => '',
   ),
-  'LIST_FILTER_LABEL' => 
+  'LIST_FILTER_LABEL' =>
   array (
     'en' => '',
     'ru' => '',
   ),
-  'ERROR_MESSAGE' => 
+  'ERROR_MESSAGE' =>
   array (
     'en' => '',
     'ru' => '',
   ),
-  'HELP_MESSAGE' => 
+  'HELP_MESSAGE' =>
   array (
     'en' => '',
     'ru' => '',
@@ -226,34 +226,34 @@ class Version20250421021650 extends Version
   'SHOW_IN_LIST' => 'Y',
   'EDIT_IN_LIST' => 'Y',
   'IS_SEARCHABLE' => 'N',
-  'SETTINGS' => 
+  'SETTINGS' =>
   array (
     'SIZE' => 20,
     'MIN_VALUE' => 0,
     'MAX_VALUE' => 0,
     'DEFAULT_VALUE' => NULL,
   ),
-  'EDIT_FORM_LABEL' => 
+  'EDIT_FORM_LABEL' =>
   array (
     'en' => 'Region ID',
     'ru' => 'ID региона',
   ),
-  'LIST_COLUMN_LABEL' => 
+  'LIST_COLUMN_LABEL' =>
   array (
     'en' => '',
     'ru' => '',
   ),
-  'LIST_FILTER_LABEL' => 
+  'LIST_FILTER_LABEL' =>
   array (
     'en' => '',
     'ru' => '',
   ),
-  'ERROR_MESSAGE' => 
+  'ERROR_MESSAGE' =>
   array (
     'en' => '',
     'ru' => '',
   ),
-  'HELP_MESSAGE' => 
+  'HELP_MESSAGE' =>
   array (
     'en' => '',
     'ru' => '',
@@ -270,7 +270,7 @@ class Version20250421021650 extends Version
   'SHOW_IN_LIST' => 'Y',
   'EDIT_IN_LIST' => 'Y',
   'IS_SEARCHABLE' => 'N',
-  'SETTINGS' => 
+  'SETTINGS' =>
   array (
     'SIZE' => 20,
     'ROWS' => 1,
@@ -279,27 +279,27 @@ class Version20250421021650 extends Version
     'MAX_LENGTH' => 0,
     'DEFAULT_VALUE' => '',
   ),
-  'EDIT_FORM_LABEL' => 
+  'EDIT_FORM_LABEL' =>
   array (
     'en' => 'Region name ru',
     'ru' => 'Название региона на русском',
   ),
-  'LIST_COLUMN_LABEL' => 
+  'LIST_COLUMN_LABEL' =>
   array (
     'en' => '',
     'ru' => '',
   ),
-  'LIST_FILTER_LABEL' => 
+  'LIST_FILTER_LABEL' =>
   array (
     'en' => '',
     'ru' => '',
   ),
-  'ERROR_MESSAGE' => 
+  'ERROR_MESSAGE' =>
   array (
     'en' => '',
     'ru' => '',
   ),
-  'HELP_MESSAGE' => 
+  'HELP_MESSAGE' =>
   array (
     'en' => '',
     'ru' => '',
@@ -316,7 +316,7 @@ class Version20250421021650 extends Version
   'SHOW_IN_LIST' => 'Y',
   'EDIT_IN_LIST' => 'Y',
   'IS_SEARCHABLE' => 'N',
-  'SETTINGS' => 
+  'SETTINGS' =>
   array (
     'SIZE' => 20,
     'ROWS' => 1,
@@ -325,27 +325,27 @@ class Version20250421021650 extends Version
     'MAX_LENGTH' => 0,
     'DEFAULT_VALUE' => '',
   ),
-  'EDIT_FORM_LABEL' => 
+  'EDIT_FORM_LABEL' =>
   array (
     'en' => 'Region name en',
     'ru' => 'Название региона на английском',
   ),
-  'LIST_COLUMN_LABEL' => 
+  'LIST_COLUMN_LABEL' =>
   array (
     'en' => '',
     'ru' => '',
   ),
-  'LIST_FILTER_LABEL' => 
+  'LIST_FILTER_LABEL' =>
   array (
     'en' => '',
     'ru' => '',
   ),
-  'ERROR_MESSAGE' => 
+  'ERROR_MESSAGE' =>
   array (
     'en' => '',
     'ru' => '',
   ),
-  'HELP_MESSAGE' => 
+  'HELP_MESSAGE' =>
   array (
     'en' => '',
     'ru' => '',
@@ -362,34 +362,34 @@ class Version20250421021650 extends Version
   'SHOW_IN_LIST' => 'Y',
   'EDIT_IN_LIST' => 'Y',
   'IS_SEARCHABLE' => 'N',
-  'SETTINGS' => 
+  'SETTINGS' =>
   array (
     'SIZE' => 20,
     'MIN_VALUE' => 0,
     'MAX_VALUE' => 0,
     'DEFAULT_VALUE' => NULL,
   ),
-  'EDIT_FORM_LABEL' => 
+  'EDIT_FORM_LABEL' =>
   array (
     'en' => 'Country ID',
     'ru' => 'ID страны',
   ),
-  'LIST_COLUMN_LABEL' => 
+  'LIST_COLUMN_LABEL' =>
   array (
     'en' => '',
     'ru' => '',
   ),
-  'LIST_FILTER_LABEL' => 
+  'LIST_FILTER_LABEL' =>
   array (
     'en' => '',
     'ru' => '',
   ),
-  'ERROR_MESSAGE' => 
+  'ERROR_MESSAGE' =>
   array (
     'en' => '',
     'ru' => '',
   ),
-  'HELP_MESSAGE' => 
+  'HELP_MESSAGE' =>
   array (
     'en' => '',
     'ru' => '',
@@ -406,7 +406,7 @@ class Version20250421021650 extends Version
   'SHOW_IN_LIST' => 'Y',
   'EDIT_IN_LIST' => 'Y',
   'IS_SEARCHABLE' => 'N',
-  'SETTINGS' => 
+  'SETTINGS' =>
   array (
     'SIZE' => 20,
     'ROWS' => 1,
@@ -415,27 +415,27 @@ class Version20250421021650 extends Version
     'MAX_LENGTH' => 0,
     'DEFAULT_VALUE' => '',
   ),
-  'EDIT_FORM_LABEL' => 
+  'EDIT_FORM_LABEL' =>
   array (
     'en' => 'Country name ru',
     'ru' => 'Название страны на русском',
   ),
-  'LIST_COLUMN_LABEL' => 
+  'LIST_COLUMN_LABEL' =>
   array (
     'en' => '',
     'ru' => '',
   ),
-  'LIST_FILTER_LABEL' => 
+  'LIST_FILTER_LABEL' =>
   array (
     'en' => '',
     'ru' => '',
   ),
-  'ERROR_MESSAGE' => 
+  'ERROR_MESSAGE' =>
   array (
     'en' => '',
     'ru' => '',
   ),
-  'HELP_MESSAGE' => 
+  'HELP_MESSAGE' =>
   array (
     'en' => '',
     'ru' => '',
@@ -452,7 +452,7 @@ class Version20250421021650 extends Version
   'SHOW_IN_LIST' => 'Y',
   'EDIT_IN_LIST' => 'Y',
   'IS_SEARCHABLE' => 'N',
-  'SETTINGS' => 
+  'SETTINGS' =>
   array (
     'SIZE' => 20,
     'ROWS' => 1,
@@ -461,27 +461,27 @@ class Version20250421021650 extends Version
     'MAX_LENGTH' => 0,
     'DEFAULT_VALUE' => '',
   ),
-  'EDIT_FORM_LABEL' => 
+  'EDIT_FORM_LABEL' =>
   array (
     'en' => 'Country name en',
     'ru' => 'Название страны на английском',
   ),
-  'LIST_COLUMN_LABEL' => 
+  'LIST_COLUMN_LABEL' =>
   array (
     'en' => '',
     'ru' => '',
   ),
-  'LIST_FILTER_LABEL' => 
+  'LIST_FILTER_LABEL' =>
   array (
     'en' => '',
     'ru' => '',
   ),
-  'ERROR_MESSAGE' => 
+  'ERROR_MESSAGE' =>
   array (
     'en' => '',
     'ru' => '',
   ),
-  'HELP_MESSAGE' => 
+  'HELP_MESSAGE' =>
   array (
     'en' => '',
     'ru' => '',
